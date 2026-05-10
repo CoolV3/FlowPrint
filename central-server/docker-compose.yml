@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:18.3
+    container_name: flow_postgres_backend
+    environment:
+      POSTGRES_USER: adminv
+      POSTGRES_PASSWORD: Dim1DBdih.
+      POSTGRES_DB: flowprint
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
