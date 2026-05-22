@@ -2,11 +2,26 @@ services:
   docker-worker:
     build: ./docker-worker
     container_name: docker-worker
-    privileged: true # Ermöglicht den Start des AppImages innerhalb von Docker
+    privileged: true
     environment:
       - CENTRAL_SERVER_URL=http://192.168.188.89:3000
-      - USER_TOKEN=1234
+      - USER_TOKEN=eEEmeRKWGFinnI6ZkXg13QPUd-Tz0nbbHRe-r2S3De4
     volumes:
       - ./docker-worker/output:/app/output
-      - ./docker-worker/profiles:/app/profiles # Hier legst du deine Bambu-Profile ab
+      - ./docker-worker/profiles:/app/profiles #
+    restart: unless-stopped
+
+  orca-slicer-api:
+    image: ghcr.io/afkfelix/orca-slicer-api:latest-orca2.3.0
+    container_name: orca-slicer-api
+    ports:
+      - "3000"
+    environment:
+      - ORCASLICER_PATH=/app/orca-slicer/orca-slicer
+      - DATA_PATH=/app/data
+      - NODE_ENV=production
+      - PORT=3000
+      - ASYNC_SLICE_RETENTION_MS=3600000
+    volumes:
+      - ./data:/app/data
     restart: unless-stopped

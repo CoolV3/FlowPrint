@@ -2,6 +2,9 @@
 
 # dependencies
 /node_modules
+/web-app/node_modules
+/docker-worker/node_modules
+/central-server/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -13,8 +16,10 @@
 # testing
 /coverage
 
+#webstorm
+.idea
 # next.js
-/.next/
+web-app/.next/
 /out/
 
 # production

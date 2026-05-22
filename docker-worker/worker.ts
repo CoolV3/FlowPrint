@@ -1,5 +1,7 @@
-import { exec } from "node:child_process"
-import { io, Socket } from "socket.io-client"
+import {exec} from "node:child_process"
+import {io, Socket} from "socket.io-client"
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
 
 /**
  * @param {string} stlPath - Stl Pfad
@@ -15,8 +17,9 @@ function BuildTunnel(): Socket {
 
     console.log("Trying to connect to server")
 
-    const socket: Socket = io(ServerURL, {
-        auth: {token: TOKEN },
+
+    const socket: any = io(ServerURL as string, {
+        auth: {token: TOKEN as string },
         reconnection: true,
     })
 
@@ -25,18 +28,18 @@ function BuildTunnel(): Socket {
         socket.emit("worker_status", { status: "Ready", workerId: socket.id})
     })
 
-    socket.on("disconnect", (reason) => {
+    socket.on("disconnect", () => {
         console.log("IMPORTANT: Tunnel disconnected")
     })
 
-    socket.on("ping", (message, callback) => {
+    socket.on("ping", (message: string, callback: any) => {
         console.log("Recived a ping from the Server")
         if (typeof callback === "function") {
             callback("Pong");
         }
     })
 
-    socket.on("get_status", (callback) => {
+    socket.on("get_status", (callback: any) => {
         console.log("Server fragt nach Status. Antworte...");
         // Sende den Status direkt an den Request zurück
         callback({
@@ -45,15 +48,71 @@ function BuildTunnel(): Socket {
         });
     });
 
+    socket.on("uploadScadFile", async ( data: {scadContent: string, fileName: string }, callback: any) => {
 
+        await SaveScadFile(data.scadContent, data.fileName)
+
+        if (typeof callback === "function") {
+            callback({ success: true, message: "Saved new Scad file from cloud successfully."});
+        }
+    })
+
+    socket.on("listScadFiles", async (callback: any) => {
+        const FolderName = "./scadFiles"
+        console.log("Sending Files to server")
+
+        try {
+            await fs.mkdir(FolderName, {recursive: true})
+
+            const allFiles =  await fs.readdir(FolderName)
+            console.log(allFiles)
+
+            if (typeof callback === "function") {
+                callback({success: true, message: "Sucessfully fetched all Scad files", data: allFiles})
+            }
+
+        } catch(error) {
+            if (typeof callback === "function") {
+                callback({
+                    success: false,
+                    message: "Error during fetching Scad files",
+                    error: error
+                });
+            }
+        }
+    })
+
+    socket.on("getFileContents", async (fileId:string, callback: any) => {
+        console.log("Sending file Contents to Server")
+
+        try {
+            const response = await GetFileContents(fileId)
+
+            if (typeof callback == "function") {
+                callback({
+                    success: true,
+                    message: `Sucessfully fetched file Contents from file ${fileId}`,
+                    data: response
+                })
+            }
+        } catch (error: any) {
+            // HIER wird der Fehler abgefangen, anstatt den Container abstürzen zu lassen!
+            if (typeof callback == "function") {
+                callback({
+                    success: false,
+                    message: "File not found or cannot be read",
+                    error: error.message
+                })
+            }
+        }
+    })
 
     return socket;
 }
 
 
 
-
-function SliceModel(stlPath:string, profilePath:string) {
+export function SliceModel(stlPath:string) {
     const outputGcode = stlPath.replace(".stl", ".gcode")
 
 
@@ -61,7 +120,7 @@ function SliceModel(stlPath:string, profilePath:string) {
 
     console.log("Startet Slicing Process")
 
-    exec(sliceCommand, (error, stdout, stderr) => {
+    exec(sliceCommand, (error) => {
         if (error) {
             console.error(`Slicing fehlgeschlagen: ${error.message}`);
             return;
@@ -71,4 +130,31 @@ function SliceModel(stlPath:string, profilePath:string) {
     });
 }
 
-const WorkerSocket = BuildTunnel();
+async function SaveScadFile(FileContent: string, FileName:string) {
+    const FolderName = "./scadFiles"
+
+    try {
+        await fs.mkdir(FolderName, {recursive: true})
+
+        const filePath = path.join(FolderName, FileName)
+
+        await fs.writeFile(filePath, FileContent, `utf-8`)
+    } catch (error) {
+        console.log(`Error: ${error}`)
+    }
+}
+
+async function GetFileContents(fileId:string) {
+    const FolderName = "./scadFiles"
+
+    try {
+        const filePath = path.join(FolderName, fileId)
+        return await fs.readFile(filePath, "utf-8")
+    } catch (error) {
+        console.error("Error while getting file contents.")
+        throw error
+    }
+}
+
+
+BuildTunnel();

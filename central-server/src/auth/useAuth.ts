@@ -54,13 +54,14 @@ async function CreateNewUser(email:string, password:string, Name:string) {
 }
 
 async function LogInUser(email:string, plainPassword:string) {
+
     const currentUser = await prisma.user.findUnique({
         where: {
             email: email
         }
     })
     if (!currentUser) {
-        return {success: false, error: "False Email or Password"}
+        return {success: false, error: "Incorrect email or password"}
     }
     const hashedPassword = currentUser.password
 
@@ -75,7 +76,7 @@ async function LogInUser(email:string, plainPassword:string) {
         )
         return {success: true, jwt_token: JWToken}
     } else {
-        return {success: false, error: "False Email or Password"}
+        return {success: false, error: "Incorrect email or password"}
     }
 
 }
