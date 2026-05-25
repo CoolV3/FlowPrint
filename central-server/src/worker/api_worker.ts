@@ -89,12 +89,24 @@ workerRouter.get("/detailScadFile/:workerId/:fileId", AuthMiddleware, WorkerAuth
 
     try {
         const response = await workerSocket.timeout(5000).emitWithAck("getFileContents", fileId);
-        // WICHTIG: Die Daten auch wirklich ans Frontend schicken!
         res.status(200).json(response);
     } catch (error) {
-        res.status(504).json({ success: false, error: "Worker hat nicht geantwortet" });
+        res.status(504).json({ success: false, error: "Worker hasnt responeded in Time" });
     }
     
+})
+
+workerRouter.get("getScadValues/:workerId/:fileId", AuthMiddleware, WorkerAuthMiddleware, async (req, res) => {
+    const fileId = req.params.fileId
+    const workerSocket: Socket = (req as any).workerSocket
+    try {
+        const response = workerSocket.emitWithAck("getScadValues")
+
+        res.status(200).json(response)
+    } catch(error) {
+        res.status(504).json({ success: false, error: "Worker hasnt responeded in Time" });
+    }
+
 })
 
 

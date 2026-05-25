@@ -107,6 +107,44 @@ function BuildTunnel(): Socket {
         }
     })
 
+    socket.on("getScadValues", async (fileId: string, callback: any) => {
+        const FolderName = "./scadFiles"
+        const filePath = path.join(FolderName, fileId)
+        const outputJsonPath = path.join(FolderName, `${fileId}.json`)
+
+        console.log(`Extracting SCAD values for: ${fileId}`)
+
+        const command = `xvfb-run -a openscad -o "${outputJsonPath}" "${filePath}"`
+
+        exec(command, async (error, stdout, stderr) => {
+            try {
+                if (error) {
+                    console.error(`OpenSCAD Error: ${error.message}`)
+                    return callback({ success: false, error: "OpenSCAD coudn´t extract the Values" });
+                }
+
+
+                const jsonRaw = await fs.readFile(outputJsonPath, "utf-8")
+                const jsonData = JSON.parse(jsonRaw)
+
+
+                await fs.unlink(outputJsonPath)
+
+                callback({
+                    success: true,
+                    message: "Values extracted successfully",
+                    data: jsonData
+                });
+
+            } catch (err: any) {
+                console.error("Error while processing Scad Values", err)
+                callback({ success: false, error: err.message })
+            }
+        });
+    });
+
+
+
     return socket;
 }
 
