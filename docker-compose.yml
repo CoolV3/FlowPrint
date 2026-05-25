@@ -5,7 +5,7 @@ services:
     privileged: true
     environment:
       - CENTRAL_SERVER_URL=http://192.168.188.89:3000
-      - USER_TOKEN=eEEmeRKWGFinnI6ZkXg13QPUd-Tz0nbbHRe-r2S3De4
+      - USER_TOKEN=gfgfsgfgssgfsgsgfgfsfgsgsf
     volumes:
       - ./docker-worker/output:/app/output
       - ./docker-worker/profiles:/app/profiles #
