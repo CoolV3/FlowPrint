@@ -11,6 +11,15 @@ import * as path from "node:path";
 const ServerURL = process.env.CENTRAL_SERVER_URL
 const TOKEN = process.env.USER_TOKEN
 const OrcaSlicerApiUrl = "http://localhost:3000"
+const FolderName = "./scadFiles"
+
+interface ScadParameter {
+    caption?: ""
+    group?: string,
+    initial: string,
+    name: string,
+    type: string
+}
 
 console.log("Programm is starting.")
 
@@ -109,13 +118,12 @@ function BuildTunnel(): Socket {
     })
 
     socket.on("getScadValues", async (fileId: string, callback: any) => {
-        const FolderName = "./scadFiles"
         const filePath = path.join(FolderName, fileId)
         const outputJsonPath = path.join(FolderName, `${fileId}.json`)
 
         console.log(`Extracting SCAD values for: ${fileId}`)
 
-        const command = `QT_X11_NO_MITSHM=1 xvfb-run -a openscad -o "${outputJsonPath}" --export-format param "${filePath}"`
+        const command = `xvfb-run -a openscad -o "${outputJsonPath}" --export-format param "${filePath}"`
 
         exec(command, async (error, stdout, stderr) => {
             try {
@@ -154,6 +162,51 @@ function BuildTunnel(): Socket {
         });
     });
 
+    socket.on("generatePrintPreview", async (fileId: string, customizedParameters: Record<string, string | number>, callback:any) => {
+        const filePath = path.join(FolderName, fileId)
+        const outputImagePath = path.join(FolderName, `${fileId}.png`)
+
+        console.log(`Generating preview for File: ${fileId}`)
+
+        const customParameterArgs = Object.entries(customizedParameters).map(([name, value]) => `-D '${name}="${value}"'`).join(" ")
+        const command = `nice -n 15 xvfb-run -a openscad -o "${outputImagePath}" --imgsize=1024,1024 ${customParameterArgs} "${filePath}"`
+
+        exec(command, async (error, stdout, stderr) => {
+            try {
+                if (error) {
+                    console.error(`OpenSCAD Error: ${error.message}`)
+                    return callback({ success: false, error: "OpenScad coudnt generate a preview picture." });
+                }
+
+
+                const ImageBuffer = await fs.readFile(outputImagePath)
+                const base64 = ImageBuffer.toString("base64")
+
+
+                await fs.unlink(outputImagePath)
+
+                callback({
+                    success: true,
+                    message: "Values extracted successfully",
+                    data: base64
+                });
+
+            } catch (err: any) {
+
+                if (error) {
+                    console.error("Command:", command);
+                    console.error("error.message:", error.message);
+                    console.error("stdout:", stdout);
+                    console.error("stderr:", stderr);
+                    return callback({
+                        success: false,
+                        error: stderr || stdout || error.message
+                    });
+                }
+
+            }
+        });
+    })
 
 
     return socket;

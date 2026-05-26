@@ -1,6 +1,7 @@
 "use client";
 
 import {useCallback, useEffect, useState} from "react";
+import Image from "next/image";
 
 export default function StartNewPrintComponent({workerId}: {workerId: string}) {
 
@@ -17,6 +18,7 @@ export default function StartNewPrintComponent({workerId}: {workerId: string}) {
     const [currentFile, setCurrentFile] = useState("version6fsdafs")
     const [customParameters, setCustomParameters] = useState<ScadParameter[]>([])
     const [customizedParameters, setCustomizedParameters] = useState<Record<string, string | number>>({})
+    const [previewImage, setPreviewImage] = useState()
 
     const fetchAllFiles = useCallback(async ()  => {
 
@@ -62,7 +64,10 @@ export default function StartNewPrintComponent({workerId}: {workerId: string}) {
         try {
             const response = await fetch(`http://localhost:3000/api/worker/getScadValues/${workerId}/${currentFile}` ,{
                 credentials: "include",
-                method: "GET"
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
             })
             const json = await response.json()
 
@@ -88,28 +93,27 @@ export default function StartNewPrintComponent({workerId}: {workerId: string}) {
         }))
     }
 
-    const startNewPrint = async () => {
+    const generatePrintPreview = async () => {
 
 
         try {
-            const response = await fetch(`http://localhost:3000/api/worker/startNewPrint` ,{
+            const response = await fetch(`http://localhost:3000/api/worker/generatePrintPreview` ,{
                 credentials: "include",
                 method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
                 body: JSON.stringify({
                     customizedParameters: customizedParameters,
                     workerId: workerId,
                     fileName: currentFile
                 })
             })
+
             const json = await response.json()
 
             if (json.success && json.data) {
-                setCustomParameters(json.data.parameters)
-
-                const initials: Record<string, string | number> = {};
-                json.data.parameters.forEach(p => {
-                    initials[p.name] = p.initial;
-                });
+                setPreviewImage(json.data)
             }
 
         } catch (error) {
@@ -118,7 +122,7 @@ export default function StartNewPrintComponent({workerId}: {workerId: string}) {
     }
 
     return(
-        <div className="flex-col flex gap-10">
+        <div className="flex-col flex gap-10 relative">
             <div className="flex flex-col items-center justify-center gap-10">
                 {files.length == null ? (
                     <div>
@@ -159,7 +163,20 @@ export default function StartNewPrintComponent({workerId}: {workerId: string}) {
 
             {customParameters.length != 0 && (
                 <div className="flex grow">
-                    <button className="grow bg-amber-500 px-15 py-3 rounded-2xl cursor-pointer transition-colors hover:bg-amber-400 duration-400">Print!</button>
+                    <button onClick={generatePrintPreview} className="grow bg-amber-500 px-15 py-3 rounded-2xl cursor-pointer transition-colors hover:bg-amber-400 duration-400">Generate Preview</button>
+                </div>
+            )}
+
+            {previewImage != null && (
+                <div className="absolute">
+                    <Image
+                        src={`data:image/png;base64,${previewImage}`}
+                        alt="3D Vorschau"
+                        width={800} 
+                        height={600}
+                        unoptimized
+                        className="rounded-lg"
+                    />
                 </div>
             )}
         </div>
