@@ -114,9 +114,6 @@ workerRouter.post("/startNewPrint", AuthMiddleware, WorkerAuthMiddleware, async 
     const {customParameters, fileName} = req.body
     const workerSocket = (req as any).workerSocket
 
-    try {
-        const response = await workerSocket.timeout.
-    }
 
 })
 

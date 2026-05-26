@@ -115,7 +115,7 @@ function BuildTunnel(): Socket {
 
         console.log(`Extracting SCAD values for: ${fileId}`)
 
-        const command = `QT_X11_NO_MITSHM=1 xvfb-run -a openscad -o "${outputJsonPath}" "${filePath}"`
+        const command = `QT_X11_NO_MITSHM=1 xvfb-run -a openscad -o "${outputJsonPath}" --export-format param "${filePath}"`
 
         exec(command, async (error, stdout, stderr) => {
             try {
@@ -138,8 +138,18 @@ function BuildTunnel(): Socket {
                 });
 
             } catch (err: any) {
-                console.error("Error while processing Scad Values", err)
-                callback({ success: false, error: err.message })
+
+                if (error) {
+                    console.error("Command:", command);
+                    console.error("error.message:", error.message);
+                    console.error("stdout:", stdout);
+                    console.error("stderr:", stderr);
+                    return callback({
+                        success: false,
+                        error: stderr || stdout || error.message
+                    });
+                }
+
             }
         });
     });
