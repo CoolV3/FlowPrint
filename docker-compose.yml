@@ -5,11 +5,17 @@ services:
     privileged: true
     environment:
       - CENTRAL_SERVER_URL=http://192.168.188.89:3000
-      - USER_TOKEN=gfgfsgfgssgfsgsgfgfsfgsgsf
+      - USER_TOKEN=${USER_TOKEN}
+      - OPENSCAD_CONTAINER=openscad
     volumes:
       - ./docker-worker/output:/app/output
-      - ./docker-worker/profiles:/app/profiles #
+      - ./docker-worker/profiles:/app/profiles
+      - ./docker-worker/scadFiles:/app/scadFiles
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - orca-slicer-api
     restart: unless-stopped
+
 
   orca-slicer-api:
     image: ghcr.io/afkfelix/orca-slicer-api:latest-orca2.3.0

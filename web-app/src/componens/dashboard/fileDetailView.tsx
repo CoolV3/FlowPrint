@@ -1,6 +1,7 @@
 "use client";
 
 import {useState, useEffect, useCallback} from "react";
+import Link from "next/link";
 
 export default function FileDetailView({ fileId, workerId }: { fileId: string, workerId: string }) {
     const [fileContents, setFileContents] = useState<string | null>(null);
@@ -41,7 +42,7 @@ export default function FileDetailView({ fileId, workerId }: { fileId: string, w
         }
     }, [fileId, workerId, fetchFileInfo]);
 
-    // UI nur als Platzhalter für die Logik-Demonstration
+
     return (
         <div className="p-6">
             <h2 className="text-xl font-bold mb-4">Datei-Details: {fileId}</h2>
@@ -61,6 +62,7 @@ export default function FileDetailView({ fileId, workerId }: { fileId: string, w
                     <pre className="bg-slate-900 text-slate-100 p-4 rounded-2xl overflow-x-auto font-mono text-sm shadow-inner">
                         <code>{fileContents}</code>
                     </pre>
+                    <Link href={`/dashboard/workers/${workerId}/print`} className="flex grow bg-amber-500 px-15 py-3 rounded-2xl cursor-pointer transition-colors hover:bg-amber-400 duration-400">Print!</Link>
                 </div>
             )}
         </div>

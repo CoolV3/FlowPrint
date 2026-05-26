@@ -43,15 +43,25 @@ export default function WorkerFileOverviewComponent({ workerId }: { workerId: st
 
 
     return(
-        <div className="flex items-center justify-center flex-col">
+        <div className="flex items-center justify-center flex-col gap-10 pt-10">
+            {files.length == 0 && (
+                <div>
+                    <h1 className="text-4xl ">Please upload a file First</h1>
+                    <Link href={`/dashboard/workers/${workerId}/upload`} className="bg-amber-500 px-15 py-3 rounded-2xl cursor-pointer transition-colors hover:bg-amber-400 duration-400">Upload a file</Link>
+                </div>
+            )}
             {files.map((fileName, index) => (
-                <div key={index} className="bg-amber-400 text-black rounded-2xl min-w-80 min-h-40 flex items-start justify-between p-5">
-                    <h1 className="text-lg">{fileName}</h1>
+                <div key={index} className="bg-amber-400 text-black rounded-2xl min-w-80 min-h-40 flex items-start flex-col p-5 w-auto">
+                    <div className="flex items-center justify-between w-full">
+                        <h1 className="text-lg">{fileName}</h1>
 
-                    <div className="border border-dashed bg-white rounded-2xl px-3 py-1 flex items-center justify-center gap-2 shadow-sm">
-                        <span className="text-sm font-medium ">.scad</span>
+                        <div className="border border-dashed bg-white rounded-2xl px-3 py-1 flex items-center justify-center gap-2 shadow-sm">
+                            <span className="text-sm font-medium ">.scad</span>
+                        </div>
                     </div>
-                    <Link href={`/dashboard/workers/${workerId}/files/${fileName}`} className="bg-amber-500 px-15 py-3 rounded-2xl cursor-pointer transition-colors hover:bg-amber-400 duration-400">See More</Link>
+                    <div className="mt-auto flex justify-center items-center w-full">
+                        <Link href={`/dashboard/workers/${workerId}/files/${fileName}`} className="bg-amber-500 px-15 py-3 rounded-2xl cursor-pointer transition-colors hover:bg-amber-400 duration-400">See More</Link>
+                    </div>
                 </div>
             ))}
         </div>

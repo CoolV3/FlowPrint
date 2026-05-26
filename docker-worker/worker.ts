@@ -10,6 +10,7 @@ import * as path from "node:path";
 
 const ServerURL = process.env.CENTRAL_SERVER_URL
 const TOKEN = process.env.USER_TOKEN
+const OrcaSlicerApiUrl = "http://localhost:3000"
 
 console.log("Programm is starting.")
 
@@ -114,7 +115,7 @@ function BuildTunnel(): Socket {
 
         console.log(`Extracting SCAD values for: ${fileId}`)
 
-        const command = `xvfb-run -a openscad -o "${outputJsonPath}" "${filePath}"`
+        const command = `QT_X11_NO_MITSHM=1 xvfb-run -a openscad -o "${outputJsonPath}" "${filePath}"`
 
         exec(command, async (error, stdout, stderr) => {
             try {
@@ -151,21 +152,7 @@ function BuildTunnel(): Socket {
 
 
 export function SliceModel(stlPath:string) {
-    const outputGcode = stlPath.replace(".stl", ".gcode")
 
-
-    const sliceCommand:string = `orcaslicer --slice --gui false --output ${outputGcode} ${stlPath}`
-
-    console.log("Startet Slicing Process")
-
-    exec(sliceCommand, (error) => {
-        if (error) {
-            console.error(`Slicing fehlgeschlagen: ${error.message}`);
-            return;
-        }
-        console.log("Slicing abgeschlossen! G-Code erstellt.");
-
-    });
 }
 
 async function SaveScadFile(FileContent: string, FileName:string) {

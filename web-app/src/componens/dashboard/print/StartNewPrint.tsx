@@ -5,7 +5,7 @@ import {useCallback, useEffect, useState} from "react";
 export default function StartNewPrintComponent({workerId}: {workerId: string}) {
     const [loading, setLoading] = useState(false)
     const [files, setFiles] = useState<string[]>([])
-    const [currentFile, setCurrentFile] = useState("")
+    const [currentFile, setCurrentFile] = useState("version6fsdafs")
 
     const fetchAllFiles = useCallback(async ()  => {
 
@@ -38,14 +38,18 @@ export default function StartNewPrintComponent({workerId}: {workerId: string}) {
         loadFiles()
     }, [fetchAllFiles]);
 
+
     const getChangeableFields = async () => {
 
         if (files.length == null) {
             return
         }
+        if (currentFile == null) {
+            return
+        }
 
         try {
-            const response = fetch(`localhost:3000/api/worker/getScadValues/${workerId}/${currentFile}` ,{
+            const response = await fetch(`http://localhost:3000/api/worker/getScadValues/${workerId}/${currentFile}` ,{
                 credentials: "include",
                 method: "GET"
             })

@@ -96,15 +96,26 @@ workerRouter.get("/detailScadFile/:workerId/:fileId", AuthMiddleware, WorkerAuth
     
 })
 
-workerRouter.get("getScadValues/:workerId/:fileId", AuthMiddleware, WorkerAuthMiddleware, async (req, res) => {
+workerRouter.get("/getScadValues/:workerId/:fileId", AuthMiddleware, WorkerAuthMiddleware, async (req, res) => {
     const fileId = req.params.fileId
     const workerSocket: Socket = (req as any).workerSocket
+    console.log("Fetching scad values")
     try {
-        const response = workerSocket.emitWithAck("getScadValues")
+        const response = await workerSocket.emitWithAck("getScadValues", fileId)
 
         res.status(200).json(response)
     } catch(error) {
         res.status(504).json({ success: false, error: "Worker hasnt responeded in Time" });
+    }
+
+})
+
+workerRouter.post("/startNewPrint", AuthMiddleware, WorkerAuthMiddleware, async (req, res) => {
+    const {customParameters, fileName} = req.body
+    const workerSocket = (req as any).workerSocket
+
+    try {
+        const response = await workerSocket.timeout.
     }
 
 })

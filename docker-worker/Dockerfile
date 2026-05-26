@@ -1,25 +1,38 @@
-FROM node:24-bookworm
+FROM --platform=linux/arm64 node:24-bookworm
 
 RUN apt-get update && apt-get install -y \
+    wget \
+    gnupg \
+    ca-certificates \
     xvfb \
-    flatpak \
-    curl \
-    dbus-x11 \
+    file \
+    procps \
     && rm -rf /var/lib/apt/lists/*
 
-# RUN flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+RUN wget -qO- https://files.openscad.org/OBS-Repository-Key.pub \
+    | gpg --dearmor -o /usr/share/keyrings/obs-openscad-nightly.gpg
 
-# RUN curl -L -o /tmp/orcaslicer.flatpak https://github.com/OrcaSlicer/OrcaSlicer/releases/download/v2.3.2/OrcaSlicer-Linux-flatpak_V2.3.2_aarch64.flatpak \
-  #   && flatpak install -y --noninteractive /tmp/orcaslicer.flatpak
+RUN echo "deb [signed-by=/usr/share/keyrings/obs-openscad-nightly.gpg] https://download.opensuse.org/repositories/home:/t-paul/Debian_12/ ./" \
+    > /etc/apt/sources.list.d/openscad.list
 
+RUN apt-get update && apt-get install -y \
+    openscad-nightly \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN ln -sf /usr/bin/openscad-nightly /usr/local/bin/openscad
+
+# Debug direkt beim Build:
+RUN uname -m && \
+    dpkg --print-architecture && \
+    file /usr/bin/openscad-nightly && \
+    openscad --version
 
 WORKDIR /app
 
 COPY package*.json ./
 RUN npm install
 
-
 COPY . .
-RUN mkdir -p uploads output profiles
+RUN mkdir -p uploads output profiles scadFiles
 
 CMD ["npx", "tsx", "worker.ts"]
