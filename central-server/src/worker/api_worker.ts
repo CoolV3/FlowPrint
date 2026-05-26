@@ -111,9 +111,17 @@ workerRouter.get("/getScadValues/:workerId/:fileId", AuthMiddleware, WorkerAuthM
 })
 
 workerRouter.post("/startNewPrint", AuthMiddleware, WorkerAuthMiddleware, async (req, res) => {
-    const {customParameters, fileName} = req.body
+    const {customizedParameters, workerId, fileName} = req.body
     const workerSocket = (req as any).workerSocket
 
+    console.log("")
+    try {
+        const response = await workerSocket.emitWithAck("getScadValues", fileId)
+
+        res.status(200).json(response)
+    } catch(error) {
+        res.status(504).json({ success: false, error: "Worker hasnt responeded in Time" });
+    }
 
 })
 
